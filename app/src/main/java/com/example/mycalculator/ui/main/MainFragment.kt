@@ -1,23 +1,27 @@
 package com.example.mycalculator.ui.main
 
-import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
 import androidx.core.view.children
+import androidx.fragment.app.Fragment
+import com.example.mycalculator.MainActivity
 import com.example.mycalculator.R
+import com.example.mycalculator.di.module.FragmentModule
 import com.example.mycalculator.models.CalculatorIdResponse
-import com.example.mycalculator.webservice.RestApi
+import com.example.mycalculator.models.TokenType
+import com.example.mycalculator.ui.viewmodel.MainViewModel
+import com.example.mycalculator.webservice.CalculatorRepository
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.main_fragment.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.exceptions.UndeliverableException
 import io.reactivex.plugins.RxJavaPlugins
+import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.main_fragment.*
+import javax.inject.Inject
 
 
 class MainFragment : Fragment() {
@@ -26,9 +30,20 @@ class MainFragment : Fragment() {
         fun newInstance() = MainFragment()
     }
 
-    private lateinit var viewModel: MainViewModel
-    private lateinit var restApi: RestApi
+    @Inject
+    lateinit var viewModel: MainViewModel
+    @Inject
+    lateinit var calculatorRepository: CalculatorRepository
+
     private var compositeDisposable = CompositeDisposable()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        (activity as MainActivity)
+            .activityComponent
+            .fragmentComponent(FragmentModule(this)).inject(this)
+    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,17 +54,23 @@ class MainFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        // Could be replaced with DI
-        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
-        restApi = RestApi()
         RxJavaPlugins.setErrorHandler { e -> handleError(e) }
         initializeCalculator()
+        buttonEquals.setOnClickListener {getResult() }
     }
 
     fun handleClickListener(view: View) {
-        textOutput.text =
-            viewModel.stringBuilder.append(getString(getTextForButton(view.id))).toString()
-        updateButtonStates(isNumber(view.id))
+        val inputValue = getString(getTextForButton(view.id))
+        textOutput.text = viewModel.stringBuilder.append(inputValue).toString()
+        val isNumber = isNumber(view.id)
+        updateButtonStates(isNumber)
+        if(viewModel.calculationId != null) {
+            postToken(
+                viewModel.calculationId!!,
+                if (isNumber) TokenType.NUMBER else TokenType.OPERATOR,
+                inputValue
+            )
+        }
     }
 
     private fun getTextForButton(id: Int) = when (id) {
@@ -140,7 +161,7 @@ class MainFragment : Fragment() {
     }
 
     private fun initializeCalculator() {
-        compositeDisposable.addAll(restApi.getCalculationId()
+        compositeDisposable.addAll(calculatorRepository.getCalculationId()
             .subscribeOn(Schedulers.io())
             .map { response -> response.body() }
             .map { t: CalculatorIdResponse -> t.id }
@@ -150,5 +171,35 @@ class MainFragment : Fragment() {
             }, { throwable -> handleError(throwable) })
         )
     }
+
+    private fun postToken(id:String, tokenType: TokenType, value:String) {
+        compositeDisposable.addAll(calculatorRepository.addTokenToCalculation(id, tokenType,value)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSuccess {if(tokenType == TokenType.NUMBER) getResult()}
+            .subscribe()
+        )
+    }
+
+    private fun updateResult(result:String) {
+        viewModel.stringBuilder.clear()
+        viewModel.stringBuilder.append(result)
+        textOutput.text = viewModel.stringBuilder.toString()
+    }
+
+
+    private fun getResult() {
+        compositeDisposable.addAll(viewModel.calculationId?.let {
+            calculatorRepository.getCalculationResult(it)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map { response -> response.body() }
+                .subscribe({ response ->
+                    updateResult(response!!.result)
+                }, { throwable -> handleError(throwable) })
+        }
+        )
+    }
+
 
 }

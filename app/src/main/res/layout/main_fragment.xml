@@ -145,7 +145,7 @@
             android:text="@string/minus" />
 
         <Button
-            android:id="@+id/button_equals"
+            android:id="@+id/buttonEquals"
             style="@style/MyButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

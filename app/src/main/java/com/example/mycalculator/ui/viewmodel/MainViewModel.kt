@@ -1,7 +1,6 @@
-package com.example.mycalculator.ui.main
+package com.example.mycalculator.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
-import java.lang.StringBuilder
 
 class MainViewModel : ViewModel() {
 
