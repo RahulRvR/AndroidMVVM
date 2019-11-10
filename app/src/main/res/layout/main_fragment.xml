@@ -17,17 +17,17 @@
         android:text="@string/number_0"
         android:textColor="@color/black"
         android:textSize="64sp"
-        app:layout_constraintBottom_toBottomOf="@id/row_1"
+        app:layout_constraintBottom_toBottomOf="@id/row1"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
-        android:id="@+id/row_1"
+        android:id="@+id/row1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@id/row_2">
+        app:layout_constraintBottom_toTopOf="@id/row2">
 
         <Button
             android:id="@+id/button1"
@@ -56,11 +56,11 @@
 
 
     <LinearLayout
-        android:id="@+id/row_2"
+        android:id="@+id/row2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@id/row_3">
+        app:layout_constraintBottom_toTopOf="@id/row3">
 
         <Button
             android:id="@+id/button4"
@@ -89,11 +89,11 @@
 
 
     <LinearLayout
-        android:id="@+id/row_3"
+        android:id="@+id/row3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@id/row_4">
+        app:layout_constraintBottom_toTopOf="@id/row4">
 
         <Button
             android:id="@+id/button7"
@@ -122,14 +122,14 @@
 
 
     <LinearLayout
-        android:id="@+id/row_4"
+        android:id="@+id/row4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <Button
-            android:id="@+id/button_plus"
+            android:id="@+id/buttonPlus"
             style="@style/MyButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -137,7 +137,7 @@
             android:text="@string/plus" />
 
         <Button
-            android:id="@+id/button_minus"
+            android:id="@+id/buttonMinus"
             style="@style/MyButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
