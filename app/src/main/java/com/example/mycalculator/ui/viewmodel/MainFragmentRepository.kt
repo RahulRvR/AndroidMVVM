@@ -29,26 +29,29 @@ class MainFragmentRepository(private val viewModel: MainViewModel) {
     }
 
     fun postToken(inputValue: String) {
-        compositeDisposable.addAll(viewModel.calculationId?.let {
-            calculatorRepository.addTokenToCalculation(it, viewModel.lastTokenType, inputValue)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSuccess { if (viewModel.lastTokenType == TokenType.NUMBER) getResult() }
-                .subscribe()
-        })
+        if(viewModel.calculationId!=null) {
+            compositeDisposable.addAll(viewModel.calculationId?.let {
+                calculatorRepository.addTokenToCalculation(it, viewModel.lastTokenType, inputValue)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnSuccess { if (viewModel.lastTokenType == TokenType.NUMBER) getResult() }
+                    .subscribe()
+            })
+        }
     }
 
     fun getResult() {
-        compositeDisposable.addAll(viewModel.calculationId?.let {
-            calculatorRepository.getCalculationResult(it)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .map { response -> response.body() }
-                .subscribe({ response ->
-                    updateResult(response!!.result)
-                }, { throwable -> handleError(throwable) })
+        if(viewModel.calculationId!=null) {
+            compositeDisposable.addAll(viewModel.calculationId?.let {
+                calculatorRepository.getCalculationResult(it)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .map { response -> response.body() }
+                    .subscribe({ response ->
+                        updateResult(response!!.result)
+                    }, { throwable -> handleError(throwable) })
+            })
         }
-        )
     }
 
     fun clear() {
