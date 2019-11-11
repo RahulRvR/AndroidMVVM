@@ -9,7 +9,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 
 private lateinit var calculatorApi: CalculatorApi
 
-class CalculatorRepository {
+class CalculatorRepository() {
     init {
         val retrofit = Retrofit.Builder()
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
