@@ -8,16 +8,13 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
-import com.example.mycalculator.MainActivity
+import androidx.fragment.app.activityViewModels
 import com.example.mycalculator.R
-import com.example.mycalculator.di.module.FragmentModule
 import com.example.mycalculator.models.TokenType
 import com.example.mycalculator.ui.viewmodel.MainViewModel
-import com.example.mycalculator.ui.viewmodel.MainFragmentRepository
 import io.reactivex.exceptions.UndeliverableException
 import io.reactivex.plugins.RxJavaPlugins
 import kotlinx.android.synthetic.main.main_fragment.*
-import javax.inject.Inject
 
 
 class MainFragment : Fragment() {
@@ -26,19 +23,7 @@ class MainFragment : Fragment() {
         fun newInstance() = MainFragment()
     }
 
-    @Inject
-    lateinit var viewModel: MainViewModel
-
-    private lateinit var repository: MainFragmentRepository
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        (activity as MainActivity)
-            .activityComponent
-            .fragmentComponent(FragmentModule(this)).inject(this)
-        repository = MainFragmentRepository(viewModel)
-    }
-
+    private val viewModel: MainViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -50,16 +35,11 @@ class MainFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         RxJavaPlugins.setErrorHandler { e -> handleError(e) }
-        repository.initializeCalculator()
-        buttonEquals.setOnClickListener { repository.getResult() }
+        viewModel.initializeCalculator()
+        buttonEquals.setOnClickListener { viewModel.getResult() }
         viewModel.result.observe(
             this,
             androidx.lifecycle.Observer { result -> textOutput.text = result })
-    }
-
-    override fun onPause() {
-        super.onPause()
-        repository.clear()
     }
 
     fun handleClickListener(view: View) {
@@ -68,7 +48,7 @@ class MainFragment : Fragment() {
         val isNumber = isNumber(view.id)
         viewModel.lastTokenType = if (isNumber) TokenType.NUMBER else TokenType.OPERATOR
         updateButtonStates(isNumber)
-        repository.postToken(inputValue)
+        viewModel.postToken(viewModel.lastTokenType, inputValue)
     }
 
     private fun getTextForButton(id: Int) = when (id) {

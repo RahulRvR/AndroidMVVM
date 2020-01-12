@@ -1,42 +1,41 @@
 package com.example.mycalculator.webservice
 
-import com.example.mycalculator.models.CalculatorNumberToken
+import com.example.mycalculator.models.CalculatorIdResponse
+import com.example.mycalculator.models.CalculatorResultResponse
 import com.example.mycalculator.models.CalculatorToken
-import com.example.mycalculator.models.TokenType
+import io.reactivex.Single
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Path
 
 private lateinit var calculatorApi: CalculatorApi
 
-class CalculatorRepository() {
-    init {
-        val retrofit = Retrofit.Builder()
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .addConverterFactory(MoshiConverterFactory.create())
-            .baseUrl("https://calculator-frontend-challenge.herokuapp.com/")
-            .build()
+private val retrofit = Retrofit.Builder()
+    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+    .addConverterFactory(MoshiConverterFactory.create())
+    .baseUrl("https://calculator-frontend-challenge.herokuapp.com/")
+    .build()
 
-        calculatorApi = retrofit.create(CalculatorApi::class.java)
-    }
+interface CalculatorApiService {
 
-    fun getCalculationId() = calculatorApi.getCalculationId()
+    @POST("/calculations")
+    fun getCalculationId(): Single<Response<CalculatorIdResponse>>
 
-    fun addTokenToCalculation(id: String, token: TokenType, value: String) =
-        when (token) {
-            TokenType.NUMBER -> {
-                calculatorApi.addTokenToCalculation(
-                    id,
-                    CalculatorNumberToken(type = token.type, value = value.toInt())
-                )
-            }
-            else -> {
-                calculatorApi.addTokenToCalculation(
-                    id,
-                    CalculatorToken(type = token.type, value = value)
-                )
-            }
-        }
+    @POST("/calculations/{calculationId}/tokens")
+    fun addTokenToCalculation(@Path("calculationId") calculationId: String, @Body input: CalculatorToken): Single<Response<CalculatorToken>>
 
-    fun getCalculationResult(id:String) = calculatorApi.getCalculationResult(id)
+
+    @GET("/calculations/{calculationId}/result")
+    fun getCalculationResult(@Path("calculationId") calculationId: String): Single<Response<CalculatorResultResponse>>
+}
+
+object CalculatorApi {
+
+    val retrofitService: CalculatorApiService by lazy { retrofit.create(CalculatorApiService::class.java) }
+
 }
